@@ -1,0 +1,159 @@
+import { useState } from 'react'
+import { Button } from "/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "/components/ui/card"
+import { Input } from "/components/ui/input"
+import { Label } from "/components/ui/label"
+
+type Flashcard = {
+  front: string
+  back: string
+}
+
+export default function LlamaFlashcards() {
+  // Initial flashcards about llamas
+  const initialFlashcards: Flashcard[] = [
+    { front: "What family do llamas belong to?", back: "Camelidae" },
+    { front: "What is the average lifespan of a llama?", back: "15-25 years" },
+    { front: "Where are llamas originally from?", back: "South America" },
+    { front: "What are baby llamas called?", back: "Crias" },
+    { front: "What is a group of llamas called?", back: "Herd" }
+  ]
+
+  // State management
+  const [flashcards, setFlashcards] = useState<Flashcard[]>(initialFlashcards)
+  const [currentCardIndex, setCurrentCardIndex] = useState(0)
+  const [showBack, setShowBack] = useState(false)
+  const [correctGuesses, setCorrectGuesses] = useState(0)
+  const [newFront, setNewFront] = useState('')
+  const [newBack, setNewBack] = useState('')
+  const [userGuess, setUserGuess] = useState('')
+
+  // Handle moving to next card
+  const nextCard = () => {
+    setShowBack(false)
+    setUserGuess('')
+    setCurrentCardIndex((prevIndex) => 
+      prevIndex === flashcards.length - 1 ? 0 : prevIndex + 1
+    )
+  }
+
+  // Handle adding a new flashcard
+  const addFlashcard = () => {
+    if (newFront.trim() && newBack.trim()) {
+      setFlashcards([...flashcards, { front: newFront, back: newBack }])
+      setNewFront('')
+      setNewBack('')
+    }
+  }
+
+  // Handle checking user's guess
+  const checkGuess = () => {
+    if (userGuess.toLowerCase() === flashcards[currentCardIndex].back.toLowerCase()) {
+      setCorrectGuesses(correctGuesses + 1)
+      alert('Correct! 🎉')
+    } else {
+      alert(`Incorrect. The answer is: ${flashcards[currentCardIndex].back}`)
+    }
+    setShowBack(true)
+  }
+
+  // Calculate progress percentage
+  const progressPercentage = flashcards.length > 0 
+    ? Math.round((correctGuesses / flashcards.length) * 100) 
+    : 0
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="max-w-2xl mx-auto space-y-8">
+        <h1 className="text-3xl font-bold text-center text-amber-800">Llama Flashcards</h1>
+        
+        {/* Progress tracker */}
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h2 className="text-lg font-semibold mb-2">Your Progress</h2>
+          <div className="w-full bg-gray-200 rounded-full h-4">
+            <div 
+              className="bg-green-500 h-4 rounded-full" 
+              style={{ width: `${progressPercentage}%` }}
+            ></div>
+          </div>
+          <p className="mt-2 text-sm text-gray-600">
+            Correct: {correctGuesses}/{flashcards.length} ({progressPercentage}%)
+          </p>
+        </div>
+
+        {/* Current flashcard */}
+        {flashcards.length > 0 ? (
+          <Card className="min-h-64 flex flex-col">
+            <CardHeader>
+              <CardTitle className="text-xl">
+                {showBack ? 'Answer' : 'Question'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex-grow flex items-center justify-center">
+              <p className="text-2xl text-center">
+                {showBack ? flashcards[currentCardIndex].back : flashcards[currentCardIndex].front}
+              </p>
+            </CardContent>
+            <div className="p-4 space-x-2">
+              {!showBack && (
+                <>
+                  <Input
+                    type="text"
+                    placeholder="Your guess..."
+                    value={userGuess}
+                    onChange={(e) => setUserGuess(e.target.value)}
+                    className="mb-2"
+                  />
+                  <Button onClick={checkGuess}>Check Answer</Button>
+                </>
+              )}
+              <Button 
+                variant="outline" 
+                onClick={() => setShowBack(!showBack)}
+              >
+                {showBack ? 'Hide Answer' : 'Reveal Answer'}
+              </Button>
+              <Button variant="secondary" onClick={nextCard}>
+                Next Card
+              </Button>
+            </div>
+          </Card>
+        ) : (
+          <Card className="min-h-64 flex items-center justify-center">
+            <CardContent>
+              <p className="text-center">No flashcards available. Add some below!</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Add new flashcard form */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">Add New Flashcard</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="front">Question/Front</Label>
+              <Input
+                id="front"
+                value={newFront}
+                onChange={(e) => setNewFront(e.target.value)}
+                placeholder="Enter the question or front text"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="back">Answer/Back</Label>
+              <Input
+                id="back"
+                value={newBack}
+                onChange={(e) => setNewBack(e.target.value)}
+                placeholder="Enter the answer or back text"
+              />
+            </div>
+            <Button onClick={addFlashcard}>Add Flashcard</Button>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
